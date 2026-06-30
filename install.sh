@@ -11,7 +11,7 @@
 
 set -eu
 
-REPO_URL="https://github.com/Gakuseei/rishot.git"
+REPO_URL="https://github.com/AryaAnish121/rishot.git"
 PREFIX="${HOME}/.local/share/rishot"
 BINDIR="${HOME}/.local/bin"
 
