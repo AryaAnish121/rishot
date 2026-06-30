@@ -23,7 +23,7 @@ Drag a region, click a window, or grab a whole monitor. Mark it up, then copy, s
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Gakuseei/rishot/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/AryaAnish121/rishot/main/install.sh | sh
 ```
 
 Bind a key (see [Keybinding](#keybinding)) and run `rishot`. The installer pulls deps through your package manager and never touches your compositor config.
@@ -33,7 +33,7 @@ Bind a key (see [Keybinding](#keybinding)) and run `rishot`. The installer pulls
 Inspect before you pipe:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Gakuseei/rishot/main/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/AryaAnish121/rishot/main/install.sh -o install.sh
 less install.sh
 sh install.sh
 ```
@@ -41,7 +41,7 @@ sh install.sh
 From a checkout:
 
 ```sh
-git clone https://github.com/Gakuseei/rishot.git
+git clone https://github.com/AryaAnish121/rishot.git
 cd rishot
 bin/rishot
 ```
@@ -57,6 +57,7 @@ Quickshell is in the official repos on Arch (extra), Fedora 44+, Void, and Debia
 - Twelve tools: rectangle, ellipse, line, arrow, pen, highlighter, text, numbered steps, blur, pixelate, zoom
 - Per-tool memory: every tool keeps its own colour and width
 - Undo and redo, copy, save, upload
+- Google Lens: upload and open the screenshot in Google Lens in your browser (`Ctrl+G`)
 - Settings panel: pixelate coarseness, blur strength, zoom factor, key rebind
 
 ## Compositors
@@ -86,7 +87,7 @@ Run `rishot` for region or window, `rishot monitor` for a whole output.
 
 Required: `quickshell` (the `qs` binary), Qt 6 (declarative, svg, 5compat, wayland), `wl-clipboard`.
 
-Optional: `imagemagick` (multi-monitor stitch), `cliphist` (clip history), `curl` (upload), `kdialog` (save dialog), `libnotify` (a desktop notification when a shot is copied, saved or uploaded).
+Optional: `imagemagick` (multi-monitor stitch), `cliphist` (clip history), `curl` (upload, Google Lens), `kdialog` (save dialog), `libnotify` (a desktop notification when a shot is copied, saved or uploaded).
 
 </details>
 
@@ -104,6 +105,12 @@ Rebinding from the settings panel on Hyprland writes a matching conf or lua line
 <details><summary>Upload</summary>
 
 Upload posts to `litterbox.catbox.moe` by default. The link it returns is unguessable but **public**, and it expires after 72 hours. When `imagemagick` is present rishot strips image metadata before sending. Set `RISHOT_UPLOAD` to use your own host. For anything sensitive, copy or save instead.
+
+</details>
+
+<details><summary>Google Lens</summary>
+
+`Ctrl+G` (or the Lens button in the toolbar) uploads the screenshot to the same litterbox endpoint, then opens the returned URL in Google Lens (`lens.google.com/uploadbyurl?url=...`) via `xdg-open`. Requires `curl`. The uploaded image is public and temporary (72h), same as the regular upload action.
 
 </details>
 

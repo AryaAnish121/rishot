@@ -11,7 +11,7 @@
 
 set -eu
 
-REPO_URL="https://github.com/Gakuseei/rishot.git"
+REPO_URL="https://github.com/AryaAnish121/rishot.git"
 PREFIX="${HOME}/.local/share/rishot"
 BINDIR="${HOME}/.local/bin"
 
@@ -63,7 +63,7 @@ opt_install() {
 install_optionals() {
 	pm="$1"
 	shift
-	say "Installing optional deps (save dialog, clip history, upload, multi-monitor stitch)…"
+	say "Installing optional deps (save dialog, clip history, upload, stitch, Google Lens)…"
 	for pkg in "$@"; do opt_install "$pm" "$pkg"; done
 }
 
@@ -176,6 +176,11 @@ install_files() {
 	fi
 
 	if [ -n "$self_dir" ] && [ -f "$self_dir/install.sh" ] && [ -d "$self_dir/src" ] && [ -f "$self_dir/bin/rishot" ]; then
+		# Running from a checkout: pull latest changes first.
+		if [ -d "$self_dir/.git" ]; then
+			say "Updating checkout: $self_dir"
+			git -C "$self_dir" pull --ff-only 2>/dev/null || warn "could not pull updates (offline?); installing current checkout"
+		fi
 		say "Installing from checkout: $self_dir"
 		rm -rf "${PREFIX:?}/src" "${PREFIX:?}/bin"
 		cp -R "$self_dir/src" "$PREFIX/src"
@@ -184,14 +189,23 @@ install_files() {
 		if ! have git; then die "git is required to fetch rishot (or run install.sh from a checkout)"; fi
 		say "Fetching rishot into $PREFIX …"
 		if [ -d "$PREFIX/.git" ]; then
-			git -C "$PREFIX" pull --ff-only || {
-				warn "update pull failed; re-cloning a fresh copy"
+			# Ensure the remote points to the right repo before pulling.
+			git -C "$PREFIX" remote set-url origin "$REPO_URL" 2>/dev/null || true
+			git -C "$PREFIX" fetch --depth 1 origin 2>/dev/null || true
+			git -C "$PREFIX" reset --hard origin/main 2>/dev/null || {
+				warn "update failed; re-cloning a fresh copy"
 				rm -rf "${PREFIX:?}"
 				git clone --depth 1 "$REPO_URL" "$PREFIX"
 			}
 		else
 			rm -rf "${PREFIX:?}"
 			git clone --depth 1 "$REPO_URL" "$PREFIX"
+		fi
+		# Re-exec the freshly fetched install.sh so the installer itself is
+		# always up-to-date, even when piped from an older URL.
+		if [ -f "$PREFIX/install.sh" ] && [ "${RISHOT_NO_REEXEC:-0}" != 1 ]; then
+			say "Re-running updated installer…"
+			exec env RISHOT_NO_REEXEC=1 sh "$PREFIX/install.sh"
 		fi
 	fi
 
@@ -275,6 +289,9 @@ main() {
 	say "Done. Installed to $PREFIX, launcher at $BINDIR/rishot."
 	say "Run it with:  rishot          (region / window)"
 	say "         or:  rishot monitor  (whole output)"
+	say ""
+	say "Features: region/window/monitor capture, annotations, copy, save, upload,"
+	say "          Google Lens (Ctrl+G opens screenshot in Lens in your browser)"
 }
 
 main "$@"
