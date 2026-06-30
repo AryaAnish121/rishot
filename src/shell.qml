@@ -489,6 +489,14 @@ ShellRoot {
         });
     }
 
+    function doLens() {
+        var tmp = root.tmpDir + "/rishot-lens.png";
+        grabTo(tmp, function (ok) {
+            if (ok) lensProc.run(tmp);
+            else root.finish("Capture failed", "", true, "");
+        });
+    }
+
     Process {
         id: saveDialog
         stdout: StdioCollector { id: saveOut }
@@ -559,6 +567,31 @@ ShellRoot {
                 + "[ \"$act\" = copy ] && printf %s \"$url\" | wl-copy; "
                 + "else command -v notify-send >/dev/null 2>&1 && "
                 + "notify-send -a rishot -i \"$3\" -u critical rishot 'Upload failed'; fi",
+                "_", file, root.uploadEndpoint, root.iconPath];
+            running = true;
+        }
+        onExited: () => Qt.quit()
+    }
+
+    /**
+     * Google Lens: uploads to litterbox, then opens the returned URL in
+     * Google Lens via xdg-open. Runs detached like uploadProc.
+     */
+    Process {
+        id: lensProc
+        function run(file) {
+            command = ["setsid", "-f", "sh", "-c",
+                "exec 9>&-; "
+                + "command -v magick >/dev/null 2>&1 && magick \"$1\" -strip \"$1\" >/dev/null 2>&1; "
+                + "url=$(curl -sf --proto '=https' --max-time 30 -A \"Mozilla/5.0\" "
+                + "-F reqtype=fileupload -F time=72h -F fileToUpload=@\"$1\" \"$2\"); "
+                + "rm -f \"$1\"; "
+                + "if [ -n \"$url\" ] && [ \"${url#http}\" != \"$url\" ]; then "
+                + "xdg-open \"https://lens.google.com/uploadbyurl?url=$url\"; "
+                + "command -v notify-send >/dev/null 2>&1 && "
+                + "notify-send -a rishot -i \"$3\" -u normal 'Google Lens' 'Opened in browser'; "
+                + "else command -v notify-send >/dev/null 2>&1 && "
+                + "notify-send -a rishot -i \"$3\" -u critical rishot 'Lens upload failed'; fi",
                 "_", file, root.uploadEndpoint, root.iconPath];
             running = true;
         }
@@ -660,6 +693,7 @@ ShellRoot {
                         if (e.key === Qt.Key_C) { root.doCopy(); e.accepted = true; }
                         else if (e.key === Qt.Key_S) { if (root.phase === "editing") root.doSave(); e.accepted = true; }
                         else if (e.key === Qt.Key_U) { if (root.phase === "editing") root.doUpload(); e.accepted = true; }
+                        else if (e.key === Qt.Key_G) { if (root.phase === "editing") root.doLens(); e.accepted = true; }
                         else if (e.key === Qt.Key_Z) { root.undo(); e.accepted = true; }
                         else if (e.key === Qt.Key_Y) { root.redo(); e.accepted = true; }
                         return;
@@ -755,6 +789,7 @@ ShellRoot {
                     onCopyRequested: root.doCopy()
                     onSaveRequested: root.doSave()
                     onUploadRequested: root.doUpload()
+                    onLensRequested: root.doLens()
                     onSettingsRequested: { root.openPopover = ""; root.settingsOpen = !root.settingsOpen; }
                     onDragMoved: (dx, dy) => {
                         if (!win.selLocal) return;

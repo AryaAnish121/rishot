@@ -26,6 +26,7 @@ Item {
     signal copyRequested()
     signal saveRequested()
     signal uploadRequested()
+    signal lensRequested()
     signal settingsRequested()
 
     /**
@@ -293,6 +294,16 @@ Item {
                     onHoveredChanged: hovered
                         ? tb.showTip("Upload · public", "Ctrl+U", uploadBtn.x + row.x + uploadBtn.width / 2)
                         : tb.hideTip("Upload · public")
+                }
+            }
+            IconButton {
+                id: lensBtn
+                icon: "lens"
+                onClicked: tb.lensRequested()
+                HoverHandler {
+                    onHoveredChanged: hovered
+                        ? tb.showTip("Google Lens", "Ctrl+G", lensBtn.x + row.x + lensBtn.width / 2)
+                        : tb.hideTip("Google Lens")
                 }
             }
 
